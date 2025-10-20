@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>Nexivoid</title>
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: black;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-family: Arial, sans-serif;
+      user-select: none;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+
+    img {
+      position: relative;
+      z-index: 1;
+      width: 250px;
+      height: auto;
+      -webkit-user-drag: none;
+      user-drag: none;
+      cursor: default;
+    }
+
+    #friendlyImage {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      opacity: 0;
+      z-index: 999;
+      pointer-events: none;
+      transition: opacity 1s ease;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      font-size: 36px;
+      color: #b14cff;
+      font-weight: bold;
+      text-shadow: 0 0 20px #b14cff, 0 0 40px #b14cff;
+      margin-top: 10px;
+    }
+
+    .profile-button {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 2;
+      transition: all 0.3s ease;
+      font-weight: bold;
+    }
+
+    .profile-button:hover {
+      background-color: #00aaff;
+      box-shadow: 0 0 20px #00aaff;
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="starfield"></canvas>
+  <img id="mainImage" src="assets/images/nexivoid.png" alt="Nexivoid">
+  <img id="friendlyImage" src="assets/images/friendly.png" alt="Friendly">
+  <h1>Nexivoid - Official Website</h1>
+  <button class="profile-button" id="profileBtn">Profile</button>
+
+  <script>
+    const rightClickSound = new Audio('assets/sounds/lclick.mp3');
+    const profileBtn = document.getElementById('profileBtn');
+    const friendlyImage = document.getElementById('friendlyImage');
+    let isPlaying = false;
+
+    function goFullscreen() {
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      else if (el.msRequestFullscreen) el.msRequestFullscreen();
+    }
+
+    function exitFullscreen() {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      else if (document.msExitFullscreen) document.msExitFullscreen();
+    }
+
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      if (e.target.id === 'profileBtn') return;
+      if (!isPlaying) {
+        isPlaying = true;
+        goFullscreen();
+        friendlyImage.style.opacity = 1;
+        rightClickSound.currentTime = 0;
+        rightClickSound.play().catch(()=>{});
+        rightClickSound.onended = () => {
+          friendlyImage.style.opacity = 0;
+          setTimeout(() => {
+            exitFullscreen();
+            isPlaying = false;
+          }, 1000);
+        }
+      }
+    });
+
+    profileBtn.addEventListener('click', () => {
+      window.location.href = 'https://www.roblox.com/users/8701648247/profile';
+    });
+
+    profileBtn.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      window.location.href = 'https://www.roblox.com/users/8701648247/profile';
+    });
+
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    const starSpeed = 0.6;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Star {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = (Math.random() - 0.5) * canvas.width;
+        this.y = (Math.random() - 0.5) * canvas.height;
+        this.z = Math.random() * canvas.width;
+      }
+      update() {
+        this.z -= starSpeed;
+        if (this.z <= 0) { this.reset(); this.z = canvas.width; }
+      }
+      draw() {
+        const sx = (this.x / this.z) * canvas.width + canvas.width / 2;
+        const sy = (this.y / this.z) * canvas.height + canvas.height / 2;
+        const size = (1 - this.z / canvas.width) * 2;
+        ctx.beginPath();
+        ctx.arc(sx, sy, size, 0, Math.PI*2);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+      }
+    }
+
+    for (let i=0; i<500; i++) stars.push(new Star());
+
+    function animate() {
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      stars.forEach(star => { star.update(); star.draw(); });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
